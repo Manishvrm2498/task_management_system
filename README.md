@@ -108,9 +108,9 @@ Request body:
 
 ```json
 {
-  "firstName": "Manish",
-  "lastName": "Verma",
-  "email": "manish@example.com",
+  "firstName": "Unknown",
+  "lastName": "Unknown",
+  "email": "example@example.com",
   "password": "Password@123"
 }
 ```
@@ -127,7 +127,7 @@ Request body:
 
 ```json
 {
-  "email": "manish@example.com",
+  "email": "example@example.com",
   "password": "Password@123"
 }
 ```
