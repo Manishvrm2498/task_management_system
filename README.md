@@ -114,6 +114,49 @@ http://localhost:5173
 
 During development, Vite proxies `/api/**` requests to the Spring Boot backend at `http://localhost:8080`.
 
+## Run with Docker Compose
+
+The project includes Docker setup for MySQL, the Spring Boot backend, and the React frontend served by Nginx.
+
+Create a local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Update `.env` with a strong MySQL root password and JWT secret, then start the stack:
+
+```bash
+docker compose up --build
+```
+
+Open the app:
+
+```text
+http://localhost
+```
+
+Useful URLs:
+
+```text
+Frontend: http://localhost
+Backend API: http://localhost:8080/api/v1
+Swagger UI: http://localhost/swagger-ui.html
+MySQL: localhost:3307
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+Remove the database volume too:
+
+```bash
+docker compose down -v
+```
+
 ## Run Tests
 
 ```bash
