@@ -12,4 +12,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByUser(UserEntity user);
 
+    void deleteByUser(UserEntity user);
+
 }

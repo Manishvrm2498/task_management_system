@@ -32,7 +32,15 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                        "/api/v1/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        "/",
+                        "/index.html",
+                        "/styles.css",
+                        "/app.js",
+                        "/favicon.ico",
+                        "/api/v1/auth/**",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasAuthority("ROLE_ADMIN")
                 .anyRequest().authenticated()
         );

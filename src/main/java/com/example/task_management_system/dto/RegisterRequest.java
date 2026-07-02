@@ -1,24 +1,25 @@
 package com.example.task_management_system.dto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonPropertyOrder
+@Schema(description = "Request body for creating a new user account")
 public class RegisterRequest {
 
     @NotBlank(message = "First name is required")
+    @Schema(description = "User first name", example = "FirstName")
     private String firstName;
 
     @NotBlank(message = "Last name is required")
+    @Schema(description = "User last name", example = "LastName")
     private String lastName;
 
     @NotBlank(message = "Email is required")
@@ -26,6 +27,7 @@ public class RegisterRequest {
             regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$",
             message = "Please provide a valid email address (e.g. user@example.com)"
     )
+    @Schema(description = "Unique user email address", example = "example@example.com")
     private String email;
 
     @NotBlank(message = "Password is required")
@@ -34,7 +36,9 @@ public class RegisterRequest {
             regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
             message = "Password must contain at least one digit, one uppercase, one lowercase, and one special character (@#$%^&+=)"
     )
+    @Schema(description = "Strong password with uppercase, lowercase, number, and special character", example = "Password@123")
     private String password;
 
+    @Schema(description = "Ignored during public registration; users are registered with USER role", example = "USER")
     private String role;
 }

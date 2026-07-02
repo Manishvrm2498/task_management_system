@@ -78,6 +78,42 @@ The API runs on:
 http://localhost:8080
 ```
 
+## Run the React Frontend
+
+The React frontend is in:
+
+```text
+frontend/
+```
+
+Install dependencies once:
+
+```bash
+cd frontend
+npm install
+```
+
+Start Spring Boot from the project root:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Then start React:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:5173
+```
+
+During development, Vite proxies `/api/**` requests to the Spring Boot backend at `http://localhost:8080`.
+
 ## Run Tests
 
 ```bash
@@ -257,10 +293,32 @@ COMPLETED
 
 ## Swagger
 
-Swagger/OpenAPI configuration is included. If enabled by dependencies/configuration, API docs are available under:
+Swagger/OpenAPI configuration is included with JWT Bearer authentication support.
+
+After starting the application, open:
 
 ```text
 http://localhost:8080/swagger-ui/index.html
+```
+
+or:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+To test secured APIs from Swagger:
+
+1. Login using `POST /api/v1/auth/login`.
+2. Copy the returned JWT token.
+3. Click the `Authorize` button in Swagger UI.
+4. Paste only the token value. Swagger will send it as a Bearer token.
+5. Try task or admin APIs directly from Swagger.
+
+OpenAPI JSON is available at:
+
+```text
+http://localhost:8080/v3/api-docs
 ```
 
 ## Common Issues

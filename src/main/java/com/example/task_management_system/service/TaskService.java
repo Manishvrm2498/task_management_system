@@ -51,11 +51,17 @@ public class TaskService {
     }
 
     private TaskResponse mapToResponse(Task task) {
+        UserEntity user = task.getUser();
+        String userName = user.getFirstName() + " " + user.getLastName();
+
         return TaskResponse.builder()
                 .id(task.getId())
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .status(task.getStatus())
+                .userId(user.getId())
+                .userName(userName.trim())
+                .userEmail(user.getEmail())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .build();
