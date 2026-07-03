@@ -33,7 +33,19 @@ public class OtpDeliveryService {
     private boolean deliveryRequired;
 
     @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${spring.mail.from:}")
     private String mailFrom;
+
+    @Value("${sendgrid.api-key:}")
+    private String sendGridApiKey;
+
+    @Value("${sendgrid.from-email:}")
+    private String sendGridFromEmail;
+
+    @Value("${sendgrid.from-name:Task Management System}")
+    private String sendGridFromName;
 
     @Value("${twilio.account-sid:}")
     private String twilioAccountSid;
@@ -54,13 +66,19 @@ public class OtpDeliveryService {
     }
 
     private void sendEmailOtp(String email, String otp, int expiryMinutes) {
-        if (isBlank(mailFrom)) {
-            handleMissingProvider("Email SMTP is not configured. OTP for " + email + ": " + otp);
+        if (!isBlank(sendGridApiKey)) {
+            sendEmailOtpWithSendGridApi(email, otp, expiryMinutes);
             return;
         }
 
+        if (isBlank(mailFrom) && isBlank(mailUsername)) {
+            handleMissingProvider("Email provider is not configured. OTP for " + email + ": " + otp);
+            return;
+        }
+
+        String from = isBlank(mailFrom) ? mailUsername : mailFrom;
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(mailFrom);
+        message.setFrom(from);
         message.setTo(email);
         message.setSubject("Task Management registration OTP");
         message.setText("Your Task Management registration OTP is " + otp
@@ -70,6 +88,45 @@ public class OtpDeliveryService {
             mailSender.send(message);
         } catch (MailException e) {
             handleDeliveryFailure("Failed to send OTP email. OTP for " + email + ": " + otp, e);
+        }
+    }
+
+    private void sendEmailOtpWithSendGridApi(String email, String otp, int expiryMinutes) {
+        if (isBlank(sendGridFromEmail)) {
+            handleMissingProvider("SendGrid from email is not configured. OTP for " + email + ": " + otp);
+            return;
+        }
+
+        String subject = "Task Management registration OTP";
+        String content = "Your Task Management registration OTP is " + otp
+                + ". It will expire in " + expiryMinutes + " minutes.";
+
+        String body = "{"
+                + "\"personalizations\":[{\"to\":[{\"email\":\"" + jsonEscape(email) + "\"}]}],"
+                + "\"from\":{\"email\":\"" + jsonEscape(sendGridFromEmail) + "\",\"name\":\"" + jsonEscape(sendGridFromName) + "\"},"
+                + "\"subject\":\"" + jsonEscape(subject) + "\","
+                + "\"content\":[{\"type\":\"text/plain\",\"value\":\"" + jsonEscape(content) + "\"}]"
+                + "}";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.sendgrid.com/v3/mail/send"))
+                .timeout(Duration.ofSeconds(10))
+                .header("Authorization", "Bearer " + sendGridApiKey)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                handleDeliveryFailure("Failed to send OTP email via SendGrid. Status " + response.statusCode()
+                        + ". OTP for " + email + ": " + otp, null);
+            }
+        } catch (IOException e) {
+            handleDeliveryFailure("Failed to send OTP email via SendGrid. OTP for " + email + ": " + otp, e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            handleDeliveryFailure("Failed to send OTP email via SendGrid. OTP for " + email + ": " + otp, e);
         }
     }
 
@@ -114,6 +171,13 @@ public class OtpDeliveryService {
         return URLEncoder.encode(key, StandardCharsets.UTF_8)
                 + "="
                 + URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    private String jsonEscape(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
 
     private void handleMissingProvider(String message) {
