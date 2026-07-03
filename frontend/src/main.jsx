@@ -58,6 +58,7 @@ function App() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userSearch, setUserSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("ALL");
+  const [adminView, setAdminView] = useState("tasks");
 
   const isAdmin = Boolean(session?.role?.includes("ADMIN"));
   const isDark = theme === "dark";
@@ -313,6 +314,7 @@ function App() {
     setTasks([]);
     setUsers([]);
     setTaskForm(emptyTask);
+    setAdminView("tasks");
   }
 
   if (!session) {
@@ -370,7 +372,7 @@ function App() {
       <header className="topbar">
         <div>
           <span className="eyebrow">Workspace</span>
-          <h1>{isAdmin ? "All tasks" : "My tasks"}</h1>
+          <h1>{isAdmin && adminView === "users" ? "User details" : isAdmin ? "All tasks" : "My tasks"}</h1>
         </div>
         <div className="account-strip">
           <span>{session.email}</span>
@@ -382,15 +384,155 @@ function App() {
         </div>
       </header>
 
-      <section className="metrics-grid">
-        <Metric label="Total" value={counts.total} icon={<ClipboardList />} />
-        <Metric label="Pending" value={counts.pending} />
-        <Metric label="In progress" value={counts.progress} />
-        <Metric label="Completed" value={counts.completed} icon={<CheckCircle2 />} />
-      </section>
-
       {isAdmin && (
-        <section className="admin-panel" aria-label="Admin user details">
+        <nav className="admin-nav" aria-label="Admin sections">
+          <button className={adminView === "tasks" ? "active" : ""} type="button" onClick={() => setAdminView("tasks")}>
+            <ClipboardList size={17} /> Tasks
+          </button>
+          <button className={adminView === "users" ? "active" : ""} type="button" onClick={() => setAdminView("users")}>
+            <Users size={17} /> Users
+          </button>
+        </nav>
+      )}
+
+      {(!isAdmin || adminView === "tasks") && (
+        <>
+          <section className="metrics-grid">
+            <Metric label="Total" value={counts.total} icon={<ClipboardList />} />
+            <Metric label="Pending" value={counts.pending} />
+            <Metric label="In progress" value={counts.progress} />
+            <Metric label="Completed" value={counts.completed} icon={<CheckCircle2 />} />
+          </section>
+
+          <section className="workspace-grid">
+            <div className="side-stack">
+              <form className="task-form" onSubmit={saveTask}>
+                <div className="section-heading">
+                  <h2>{taskForm.id ? "Edit task" : "Create task"}</h2>
+                  {taskForm.id && (
+                    <button className="icon-button" type="button" onClick={() => setTaskForm(emptyTask)}>x</button>
+                  )}
+                </div>
+
+                <label>Title
+                  <input
+                    value={taskForm.title}
+                    onChange={(event) => setTaskForm({ ...taskForm, title: event.target.value })}
+                    minLength={3}
+                    maxLength={100}
+                    required
+                    placeholder="Learn Spring Boot"
+                  />
+                </label>
+
+                <label>Description
+                  <textarea
+                    value={taskForm.description}
+                    onChange={(event) => setTaskForm({ ...taskForm, description: event.target.value })}
+                    minLength={10}
+                    maxLength={500}
+                    required
+                    placeholder="Practice building secure REST APIs with Spring Boot"
+                  />
+                </label>
+
+                <label>Status
+                  <select value={taskForm.status} onChange={(event) => setTaskForm({ ...taskForm, status: event.target.value })}>
+                    <option value="PENDING">Pending</option>
+                    <option value="IN_PROGRESS">In progress</option>
+                    <option value="COMPLETED">Completed</option>
+                  </select>
+                </label>
+
+                <button className="primary-button" type="submit"><Plus size={18} /> {taskForm.id ? "Update task" : "Create task"}</button>
+              </form>
+
+              <section className="lookup-panel">
+                <div className="section-heading">
+                  <h2>Find task</h2>
+                </div>
+                <form className="lookup-form" onSubmit={findTaskById}>
+                  <label>Task ID
+                    <input
+                      value={lookupId}
+                      onChange={(event) => setLookupId(event.target.value)}
+                      type="number"
+                      min="1"
+                      required
+                      placeholder="1"
+                    />
+                  </label>
+                  <button className="primary-button" type="submit">Get task</button>
+                </form>
+
+                {lookupTask && (
+                  <article className="lookup-card">
+                    <div className="task-card-header">
+                      <h3>{lookupTask.title}</h3>
+                      <span className={`status-badge status-${lookupTask.status}`}>{formatStatus(lookupTask.status)}</span>
+                    </div>
+                    {isAdmin && <OwnerLabel task={lookupTask} />}
+                    <p>{lookupTask.description}</p>
+                    <span className="task-meta">ID {lookupTask.id} · Updated {formatDate(lookupTask.updatedAt)}</span>
+                    <div className="task-actions">
+                      <button className="text-button" type="button" onClick={() => setTaskForm(lookupTask)}><Pencil size={16} /> Edit</button>
+                      <button className="text-button danger" type="button" onClick={() => deleteTask(lookupTask)}><Trash2 size={16} /> Delete</button>
+                    </div>
+                  </article>
+                )}
+              </section>
+            </div>
+
+            <section className="task-panel">
+              <div className="list-toolbar">
+                <div className="section-heading">
+                  <h2>Tasks</h2>
+                  <button className="icon-button" type="button" onClick={loadTasks} title="Refresh">
+                    {loading ? <Loader2 className="spin" size={18} /> : <RefreshCw size={18} />}
+                  </button>
+                </div>
+                <div className="filters">
+                  {["ALL", "PENDING", "IN_PROGRESS", "COMPLETED"].map((status) => (
+                    <button
+                      key={status}
+                      className={filter === status ? "active" : ""}
+                      type="button"
+                      onClick={() => setFilter(status)}
+                    >
+                      {formatStatus(status)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="task-list">
+                {filteredTasks.length ? filteredTasks.map((task) => (
+                  <article className="task-card" key={task.id}>
+                    <div className="task-card-header">
+                      <h3>{task.title}</h3>
+                      <span className={`status-badge status-${task.status}`}>{formatStatus(task.status)}</span>
+                    </div>
+                    {isAdmin && <OwnerLabel task={task} />}
+                    <p>{task.description}</p>
+                    <span className="task-meta">Updated {formatDate(task.updatedAt)}</span>
+                    <div className="task-actions">
+                      <button className="text-button" type="button" onClick={() => setTaskForm(task)}><Pencil size={16} /> Edit</button>
+                      <button className="text-button danger" type="button" onClick={() => deleteTask(task)}><Trash2 size={16} /> Delete</button>
+                    </div>
+                  </article>
+                )) : (
+                  <div className="empty-state">No tasks found.</div>
+                )}
+              </div>
+
+              {taskMessage && <p className={taskMessage.includes("Backend") || taskMessage.includes("failed") ? "message error" : "message success"}>{taskMessage}</p>}
+            </section>
+          </section>
+        </>
+      )}
+
+      {isAdmin && adminView === "users" && (
+        <section className="admin-panel admin-users-page" aria-label="Admin user details">
           <div className="list-toolbar">
             <div className="section-heading">
               <h2><Users size={20} /> User details</h2>
@@ -462,131 +604,6 @@ function App() {
           {userMessage && <p className={userMessage.includes("updated") || userMessage.includes("deleted") ? "message success" : "message error"}>{userMessage}</p>}
         </section>
       )}
-
-      <section className="workspace-grid">
-        <div className="side-stack">
-          <form className="task-form" onSubmit={saveTask}>
-            <div className="section-heading">
-              <h2>{taskForm.id ? "Edit task" : "Create task"}</h2>
-              {taskForm.id && (
-                <button className="icon-button" type="button" onClick={() => setTaskForm(emptyTask)}>x</button>
-              )}
-            </div>
-
-            <label>Title
-              <input
-                value={taskForm.title}
-                onChange={(event) => setTaskForm({ ...taskForm, title: event.target.value })}
-                minLength={3}
-                maxLength={100}
-                required
-                placeholder="Learn Spring Boot"
-              />
-            </label>
-
-            <label>Description
-              <textarea
-                value={taskForm.description}
-                onChange={(event) => setTaskForm({ ...taskForm, description: event.target.value })}
-                minLength={10}
-                maxLength={500}
-                required
-                placeholder="Practice building secure REST APIs with Spring Boot"
-              />
-            </label>
-
-            <label>Status
-              <select value={taskForm.status} onChange={(event) => setTaskForm({ ...taskForm, status: event.target.value })}>
-                <option value="PENDING">Pending</option>
-                <option value="IN_PROGRESS">In progress</option>
-                <option value="COMPLETED">Completed</option>
-              </select>
-            </label>
-
-            <button className="primary-button" type="submit"><Plus size={18} /> {taskForm.id ? "Update task" : "Create task"}</button>
-          </form>
-
-          <section className="lookup-panel">
-            <div className="section-heading">
-              <h2>Find task</h2>
-            </div>
-            <form className="lookup-form" onSubmit={findTaskById}>
-              <label>Task ID
-                <input
-                  value={lookupId}
-                  onChange={(event) => setLookupId(event.target.value)}
-                  type="number"
-                  min="1"
-                  required
-                  placeholder="1"
-                />
-              </label>
-              <button className="primary-button" type="submit">Get task</button>
-            </form>
-
-            {lookupTask && (
-              <article className="lookup-card">
-                <div className="task-card-header">
-                  <h3>{lookupTask.title}</h3>
-                  <span className={`status-badge status-${lookupTask.status}`}>{formatStatus(lookupTask.status)}</span>
-                </div>
-                {isAdmin && <OwnerLabel task={lookupTask} />}
-                <p>{lookupTask.description}</p>
-                <span className="task-meta">ID {lookupTask.id} · Updated {formatDate(lookupTask.updatedAt)}</span>
-                <div className="task-actions">
-                  <button className="text-button" type="button" onClick={() => setTaskForm(lookupTask)}><Pencil size={16} /> Edit</button>
-                  <button className="text-button danger" type="button" onClick={() => deleteTask(lookupTask)}><Trash2 size={16} /> Delete</button>
-                </div>
-              </article>
-            )}
-          </section>
-        </div>
-
-        <section className="task-panel">
-          <div className="list-toolbar">
-            <div className="section-heading">
-              <h2>Tasks</h2>
-              <button className="icon-button" type="button" onClick={loadTasks} title="Refresh">
-                {loading ? <Loader2 className="spin" size={18} /> : <RefreshCw size={18} />}
-              </button>
-            </div>
-            <div className="filters">
-              {["ALL", "PENDING", "IN_PROGRESS", "COMPLETED"].map((status) => (
-                <button
-                  key={status}
-                  className={filter === status ? "active" : ""}
-                  type="button"
-                  onClick={() => setFilter(status)}
-                >
-                  {formatStatus(status)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="task-list">
-            {filteredTasks.length ? filteredTasks.map((task) => (
-              <article className="task-card" key={task.id}>
-                <div className="task-card-header">
-                  <h3>{task.title}</h3>
-                  <span className={`status-badge status-${task.status}`}>{formatStatus(task.status)}</span>
-                </div>
-                {isAdmin && <OwnerLabel task={task} />}
-                <p>{task.description}</p>
-                <span className="task-meta">Updated {formatDate(task.updatedAt)}</span>
-                <div className="task-actions">
-                  <button className="text-button" type="button" onClick={() => setTaskForm(task)}><Pencil size={16} /> Edit</button>
-                  <button className="text-button danger" type="button" onClick={() => deleteTask(task)}><Trash2 size={16} /> Delete</button>
-                </div>
-              </article>
-            )) : (
-              <div className="empty-state">No tasks found.</div>
-            )}
-          </div>
-
-          {taskMessage && <p className={taskMessage.includes("Backend") || taskMessage.includes("failed") ? "message error" : "message success"}>{taskMessage}</p>}
-        </section>
-      </section>
     </main>
   );
 }

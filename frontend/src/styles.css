@@ -362,6 +362,45 @@ textarea:focus {
   flex-wrap: wrap;
 }
 
+.admin-nav {
+  display: inline-flex;
+  gap: 6px;
+  padding: 5px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.admin-nav button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.admin-nav button.active {
+  background: white;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+:root[data-theme="dark"] .admin-nav {
+  background: #0d1424;
+  border-color: #2b3850;
+}
+
+:root[data-theme="dark"] .admin-nav button.active {
+  background: #1d2940;
+  border-color: #344462;
+}
+
 .role-badge {
   min-height: 32px;
   padding: 0 10px;
@@ -434,6 +473,10 @@ textarea:focus {
 
 .admin-panel {
   margin-bottom: 18px;
+}
+
+.admin-users-page {
+  margin-bottom: 0;
 }
 
 .section-heading {
@@ -782,6 +825,14 @@ textarea:focus {
 
   .account-strip {
     justify-content: flex-start;
+  }
+
+  .admin-nav {
+    width: 100%;
+  }
+
+  .admin-nav button {
+    flex: 1;
   }
 
   .list-toolbar {
