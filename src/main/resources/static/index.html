@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Task Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="app-shell">
+    <section id="authView" class="auth-layout">
+        <div class="brand-panel">
+            <p class="eyebrow">Task Management System</p>
+            <h1>Manage work with secure task access.</h1>
+            <p class="brand-copy">Sign in to create, update, and track tasks. Admin accounts can review tasks across the system.</p>
+        </div>
+
+        <section class="auth-panel" aria-label="Authentication">
+            <div class="segmented-control" role="tablist" aria-label="Authentication mode">
+                <button id="loginTab" class="segment active" type="button">Login</button>
+                <button id="registerTab" class="segment" type="button">Register</button>
+            </div>
+
+            <form id="loginForm" class="form-stack">
+                <label>
+                    Email
+                    <input id="loginEmail" type="email" autocomplete="email" required placeholder="manish@example.com">
+                </label>
+                <label>
+                    Password
+                    <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Password@123">
+                </label>
+                <button class="primary-button" type="submit">Login</button>
+            </form>
+
+            <form id="registerForm" class="form-stack hidden">
+                <div class="two-column">
+                    <label>
+                        First name
+                        <input id="firstName" type="text" autocomplete="given-name" required placeholder="Manish">
+                    </label>
+                    <label>
+                        Last name
+                        <input id="lastName" type="text" autocomplete="family-name" required placeholder="Verma">
+                    </label>
+                </div>
+                <label>
+                    Email
+                    <input id="registerEmail" type="email" autocomplete="email" required placeholder="manish@example.com">
+                </label>
+                <label>
+                    Password
+                    <input id="registerPassword" type="password" autocomplete="new-password" required placeholder="Password@123">
+                </label>
+                <button class="primary-button" type="submit">Create account</button>
+            </form>
+
+            <p id="authMessage" class="message" role="status"></p>
+        </section>
+    </section>
+
+    <section id="dashboardView" class="dashboard hidden">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Workspace</p>
+                <h1>Tasks</h1>
+            </div>
+            <div class="account-strip">
+                <span id="userEmail" class="account-email"></span>
+                <span id="userRole" class="role-badge">USER</span>
+                <button id="logoutButton" class="ghost-button" type="button">Logout</button>
+            </div>
+        </header>
+
+        <section class="metrics-grid" aria-label="Task summary">
+            <article>
+                <span>Total</span>
+                <strong id="totalCount">0</strong>
+            </article>
+            <article>
+                <span>Pending</span>
+                <strong id="pendingCount">0</strong>
+            </article>
+            <article>
+                <span>In progress</span>
+                <strong id="progressCount">0</strong>
+            </article>
+            <article>
+                <span>Completed</span>
+                <strong id="completedCount">0</strong>
+            </article>
+        </section>
+
+        <section class="workspace-grid">
+            <form id="taskForm" class="task-form">
+                <div class="section-heading">
+                    <h2 id="formTitle">Create task</h2>
+                    <button id="cancelEditButton" class="icon-button hidden" type="button" title="Cancel edit" aria-label="Cancel edit">x</button>
+                </div>
+                <input id="taskId" type="hidden">
+                <label>
+                    Title
+                    <input id="taskTitle" type="text" minlength="3" maxlength="100" required placeholder="Learn Spring Boot">
+                </label>
+                <label>
+                    Description
+                    <textarea id="taskDescription" minlength="10" maxlength="500" required placeholder="Practice building secure REST APIs with Spring Boot"></textarea>
+                </label>
+                <label>
+                    Status
+                    <select id="taskStatus" required>
+                        <option value="PENDING">Pending</option>
+                        <option value="IN_PROGRESS">In progress</option>
+                        <option value="COMPLETED">Completed</option>
+                    </select>
+                </label>
+                <button id="saveTaskButton" class="primary-button" type="submit">Create task</button>
+            </form>
+
+            <section class="task-list-panel">
+                <div class="list-toolbar">
+                    <div class="section-heading">
+                        <h2 id="listTitle">My tasks</h2>
+                        <button id="refreshButton" class="icon-button" type="button" title="Refresh" aria-label="Refresh">R</button>
+                    </div>
+                    <div class="filters" aria-label="Task filters">
+                        <button class="filter-button active" type="button" data-filter="ALL">All</button>
+                        <button class="filter-button" type="button" data-filter="PENDING">Pending</button>
+                        <button class="filter-button" type="button" data-filter="IN_PROGRESS">In progress</button>
+                        <button class="filter-button" type="button" data-filter="COMPLETED">Completed</button>
+                    </div>
+                </div>
+                <div id="taskList" class="task-list" aria-live="polite"></div>
+                <p id="taskMessage" class="message" role="status"></p>
+            </section>
+        </section>
+    </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
