@@ -45,6 +45,7 @@ public class AdminUserService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole())
                 .enabled(user.isEnabled())
                 .createdAt(user.getCreatedAt())

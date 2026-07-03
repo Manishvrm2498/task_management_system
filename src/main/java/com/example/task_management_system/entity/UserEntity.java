@@ -23,11 +23,18 @@ public class UserEntity {
 
     @Column(unique = true)
     private String email;
+
+    @Column(unique = true)
+    private String phoneNumber;
+
     private String password;
     private String role;
 
     @Column(nullable = false)
     private boolean enabled = false;
+
+    private String registrationOtpHash;
+    private LocalDateTime registrationOtpExpiresAt;
 
     @CreationTimestamp
     @Column(updatable = false)

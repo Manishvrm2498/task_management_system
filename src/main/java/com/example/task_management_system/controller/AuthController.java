@@ -25,7 +25,7 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(
             summary = "Register user",
-            description = "Creates a new user account with USER role."
+            description = "Creates a disabled USER account and sends OTP to email and phone number."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "User registered successfully",
@@ -41,6 +41,44 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(authService.register(registerRequest));
+    }
+
+    @PostMapping("/verify-registration")
+    @Operation(
+            summary = "Verify registration OTP",
+            description = "Verifies the 6 digit OTP sent to email and phone number, then enables the account."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Account verified successfully",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid or expired OTP",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    public ResponseEntity<String> verifyRegistrationOtp(
+            @Valid @RequestBody VerifyRegistrationOtpRequest request) {
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(authService.verifyRegistrationOtp(request));
+    }
+
+    @PostMapping("/resend-registration-otp")
+    @Operation(
+            summary = "Resend registration OTP",
+            description = "Generates and sends a new OTP to the registered email and phone number."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OTP resent successfully",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    public ResponseEntity<String> resendRegistrationOtp(
+            @Valid @RequestBody ResendRegistrationOtpRequest request) {
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(authService.resendRegistrationOtp(request));
     }
 
     @PostMapping("/login")

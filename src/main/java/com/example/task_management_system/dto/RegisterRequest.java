@@ -30,6 +30,14 @@ public class RegisterRequest {
     @Schema(description = "Unique user email address", example = "example@example.com")
     private String email;
 
+    @NotBlank(message = "Phone number is required")
+    @Pattern(
+            regexp = "^\\+?[1-9][0-9]{9,14}$",
+            message = "Please provide a valid phone number with country code, e.g. +919876543210"
+    )
+    @Schema(description = "Unique phone number with country code", example = "+919876543210")
+    private String phoneNumber;
+
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(

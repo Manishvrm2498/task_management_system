@@ -23,6 +23,9 @@ public class UserResponse {
     @Schema(description = "Email address", example = "example@example.com")
     private String email;
 
+    @Schema(description = "Phone number", example = "+919876543210")
+    private String phoneNumber;
+
     @Schema(description = "User role", example = "USER")
     private String role;
 

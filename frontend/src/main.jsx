@@ -46,6 +46,7 @@ function App() {
   const [mode, setMode] = useState("login");
   const [authMessage, setAuthMessage] = useState("");
   const [authError, setAuthError] = useState("");
+  const [pendingRegistrationEmail, setPendingRegistrationEmail] = useState("");
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("ALL");
   const [taskForm, setTaskForm] = useState(emptyTask);
@@ -88,6 +89,7 @@ function App() {
         user.firstName,
         user.lastName,
         user.email,
+        user.phoneNumber,
         role,
         user.enabled ? "enabled" : "disabled"
       ].join(" ").toLowerCase();
@@ -154,20 +156,71 @@ function App() {
     const registerForm = event.currentTarget;
     const form = new FormData(registerForm);
 
+    const email = form.get("email").trim();
+
     try {
       await apiRequest("/auth/register", {
         method: "POST",
         body: JSON.stringify({
           firstName: form.get("firstName").trim(),
           lastName: form.get("lastName").trim(),
-          email: form.get("email").trim(),
+          email,
+          phoneNumber: form.get("phoneNumber").trim(),
           password: form.get("password")
         })
       });
 
       registerForm.reset();
+      setPendingRegistrationEmail(email);
+      setMode("verify");
+      setAuthMessage("OTP sent to your email and phone number.");
+    } catch (error) {
+      setAuthError(error.message);
+      setAuthMessage("");
+    }
+  }
+
+  async function verifyRegistration(event) {
+    event.preventDefault();
+    setAuthError("");
+    setAuthMessage("Verifying OTP...");
+
+    const verifyForm = event.currentTarget;
+    const form = new FormData(verifyForm);
+
+    try {
+      await apiRequest("/auth/verify-registration", {
+        method: "POST",
+        body: JSON.stringify({
+          email: form.get("email").trim(),
+          otp: form.get("otp").trim()
+        })
+      });
+
+      verifyForm.reset();
       setMode("login");
-      setAuthMessage("Account created. Login to continue.");
+      setAuthMessage("Account verified. Login to continue.");
+    } catch (error) {
+      setAuthError(error.message);
+      setAuthMessage("");
+    }
+  }
+
+  async function resendRegistrationOtp() {
+    if (!pendingRegistrationEmail) {
+      setAuthError("Enter your email in the OTP form first.");
+      return;
+    }
+
+    setAuthError("");
+    setAuthMessage("Resending OTP...");
+
+    try {
+      await apiRequest("/auth/resend-registration-otp", {
+        method: "POST",
+        body: JSON.stringify({ email: pendingRegistrationEmail.trim() })
+      });
+      setAuthMessage("OTP resent to your email and phone number.");
     } catch (error) {
       setAuthError(error.message);
       setAuthMessage("");
@@ -343,21 +396,42 @@ function App() {
             </button>
           </div>
 
-          {mode === "login" ? (
+          {mode === "login" && (
             <form className="form-stack" onSubmit={login}>
               <label>Email<input name="email" type="email" required placeholder="example@example.com" /></label>
               <label>Password<input name="password" type="password" required placeholder="Password@123" /></label>
               <button className="primary-button" type="submit">Login</button>
             </form>
-          ) : (
+          )}
+
+          {mode === "register" && (
             <form className="form-stack" onSubmit={register}>
               <div className="two-column">
                 <label>First name<input name="firstName" required placeholder="FirstName" /></label>
                 <label>Last name<input name="lastName" required placeholder="LastName" /></label>
               </div>
               <label>Email<input name="email" type="email" required placeholder="example@example.com" /></label>
+              <label>Phone number<input name="phoneNumber" type="tel" required placeholder="+919876543210" /></label>
               <label>Password<input name="password" type="password" required placeholder="Password@123" /></label>
               <button className="primary-button" type="submit"><UserPlus size={18} /> Create account</button>
+            </form>
+          )}
+
+          {mode === "verify" && (
+            <form className="form-stack" onSubmit={verifyRegistration}>
+              <label>Email
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  value={pendingRegistrationEmail}
+                  onChange={(event) => setPendingRegistrationEmail(event.target.value)}
+                  placeholder="example@example.com"
+                />
+              </label>
+              <label>OTP<input name="otp" inputMode="numeric" pattern="[0-9]{6}" maxLength="6" required placeholder="123456" /></label>
+              <button className="primary-button" type="submit"><CheckCircle2 size={18} /> Verify account</button>
+              <button className="text-button" type="button" onClick={resendRegistrationOtp}>Resend OTP</button>
             </form>
           )}
 
@@ -580,6 +654,7 @@ function App() {
                 <div>
                   <strong>{user.firstName} {user.lastName}</strong>
                   <small>{user.email}</small>
+                  {user.phoneNumber && <small>{user.phoneNumber}</small>}
                 </div>
                 <select value={normalizeRole(user.role)} onChange={(event) => updateUser(user, { role: event.target.value })}>
                   <option value="USER">USER</option>
