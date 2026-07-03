@@ -151,7 +151,8 @@ function App() {
     setAuthError("");
     setAuthMessage("Creating account...");
 
-    const form = new FormData(event.currentTarget);
+    const registerForm = event.currentTarget;
+    const form = new FormData(registerForm);
 
     try {
       await apiRequest("/auth/register", {
@@ -164,7 +165,7 @@ function App() {
         })
       });
 
-      event.currentTarget.reset();
+      registerForm.reset();
       setMode("login");
       setAuthMessage("Account created. Login to continue.");
     } catch (error) {
