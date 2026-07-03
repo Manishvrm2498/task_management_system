@@ -1,5 +1,4 @@
-const API_BASE = "/api/v1";
-
+const API_BASE = "https://task-management-system-crkk.onrender.com/api/v1";
 export function decodeJwt(token) {
   try {
     const payload = token.split(".")[1];
