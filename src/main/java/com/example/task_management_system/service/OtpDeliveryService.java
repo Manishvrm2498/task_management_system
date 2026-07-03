@@ -4,6 +4,7 @@ import com.example.task_management_system.exception.OtpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 
 @Service
@@ -23,7 +25,9 @@ public class OtpDeliveryService {
     private static final Logger log = LoggerFactory.getLogger(OtpDeliveryService.class);
 
     private final JavaMailSender mailSender;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
 
     @Value("${app.otp.delivery-required:false}")
     private boolean deliveryRequired;
@@ -61,7 +65,12 @@ public class OtpDeliveryService {
         message.setSubject("Task Management registration OTP");
         message.setText("Your Task Management registration OTP is " + otp
                 + ". It will expire in " + expiryMinutes + " minutes.");
-        mailSender.send(message);
+
+        try {
+            mailSender.send(message);
+        } catch (MailException e) {
+            handleDeliveryFailure("Failed to send OTP email. OTP for " + email + ": " + otp, e);
+        }
     }
 
     private void sendSmsOtp(String phoneNumber, String otp, int expiryMinutes) {
@@ -81,6 +90,7 @@ public class OtpDeliveryService {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.twilio.com/2010-04-01/Accounts/" + twilioAccountSid + "/Messages.json"))
+                .timeout(Duration.ofSeconds(10))
                 .header("Authorization", authHeader)
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
@@ -89,13 +99,14 @@ public class OtpDeliveryService {
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new OtpException("Failed to send OTP SMS");
+                handleDeliveryFailure("Failed to send OTP SMS. Twilio status " + response.statusCode()
+                        + ". OTP for " + phoneNumber + ": " + otp, null);
             }
         } catch (IOException e) {
-            throw new OtpException("Failed to send OTP SMS");
+            handleDeliveryFailure("Failed to send OTP SMS. OTP for " + phoneNumber + ": " + otp, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new OtpException("Failed to send OTP SMS");
+            handleDeliveryFailure("Failed to send OTP SMS. OTP for " + phoneNumber + ": " + otp, e);
         }
     }
 
@@ -110,6 +121,18 @@ public class OtpDeliveryService {
             throw new OtpException("OTP delivery is not configured");
         }
         log.warn(message);
+    }
+
+    private void handleDeliveryFailure(String message, Exception exception) {
+        if (deliveryRequired) {
+            throw new OtpException("Failed to deliver OTP");
+        }
+
+        if (exception == null) {
+            log.warn(message);
+        } else {
+            log.warn(message, exception);
+        }
     }
 
     private boolean isBlank(String value) {
