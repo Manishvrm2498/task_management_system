@@ -2,16 +2,6 @@
 
 A Spring Boot REST API for managing tasks with JWT authentication, role-based access, and MySQL persistence.
 
-## Full Documentation
-
-Complete project documentation is available here:
-
-```text
-PROJECT_DOCUMENTATION.md
-```
-
-It includes backend architecture, frontend architecture, dependencies, local setup, Docker setup, Render backend deployment, Vercel frontend deployment, Aiven MySQL setup, environment variables, and common deployment errors.
-
 ## Features
 
 - User registration and login
