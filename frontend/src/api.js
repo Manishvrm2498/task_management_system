@@ -29,7 +29,7 @@ export async function apiRequest(path, options = {}, token) {
       headers
     });
   } catch {
-    throw new Error("Backend is not reachable. Start Spring Boot on http://localhost:8080.");
+    throw new Error(`Backend is not reachable at ${API_BASE}. Check the backend URL and CORS settings.`);
   }
 
   const contentType = response.headers.get("content-type") || "";
