@@ -1,6 +1,6 @@
 # Task Management System
 
-A Spring Boot REST API for managing tasks with JWT authentication, role-based access, and SQLite persistence.
+A Spring Boot REST API for managing tasks with JWT authentication, role-based access, and MySQL persistence.
 
 ## Features
 
@@ -19,7 +19,7 @@ A Spring Boot REST API for managing tasks with JWT authentication, role-based ac
 - Spring Web MVC
 - Spring Security
 - Spring Data JPA
-- SQLite
+- MySQL
 - JWT (`jjwt`)
 - Lombok
 - Maven
@@ -44,16 +44,17 @@ src/main/java/com/example/task_management_system
 ## Prerequisites
 
 - Java 21 or newer
+- MySQL running locally
 - Maven, or use the included Maven wrapper
 
 ## Database Configuration
 
-The application uses a local SQLite database by default:
+The application uses this MySQL database by default:
 
 ```properties
-spring.datasource.url=jdbc:sqlite:./task-management.db
-spring.datasource.username=
-spring.datasource.password=
+spring.datasource.url=jdbc:mysql://localhost:3306/task_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=Password
 spring.jpa.hibernate.ddl-auto=update
 ```
 
@@ -115,7 +116,7 @@ During development, Vite proxies `/api/**` requests to the Spring Boot backend a
 
 ## Run with Docker Compose
 
-The project includes Docker setup for the Spring Boot backend and the React frontend served by Nginx. SQLite data is stored in a Docker volume.
+The project includes Docker setup for MySQL, the Spring Boot backend, and the React frontend served by Nginx.
 
 Create a local environment file:
 
@@ -123,7 +124,7 @@ Create a local environment file:
 cp .env.example .env
 ```
 
-Update `.env` with a strong JWT secret, then start the stack:
+Update `.env` with a strong MySQL root password and JWT secret, then start the stack:
 
 ```bash
 docker compose up --build
@@ -141,6 +142,7 @@ Useful URLs:
 Frontend: http://localhost
 Backend API: http://localhost:8080/api/v1
 Swagger UI: http://localhost/swagger-ui.html
+MySQL: localhost:3307
 ```
 
 Stop the stack:
@@ -368,7 +370,7 @@ http://localhost:8080/v3/api-docs
 
 Check these first:
 
-- The user role in SQLite must be `ADMIN` or `ROLE_ADMIN`.
+- The user role in MySQL must be `ADMIN` or `ROLE_ADMIN`.
 - Restart the Spring Boot app after code changes.
 - Log in again after changing the role.
 - Use the new admin token in the `Authorization` header.
