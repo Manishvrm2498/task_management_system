@@ -27,21 +27,6 @@ public class GlobalExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, Object>> handleJsonErrors(HttpMessageNotReadableException ex) {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("error", "Malformed JSON or Invalid Type");
-
-        String message = "The request data is invalid.";
-        if (ex.getMessage() != null && ex.getMessage().contains("RoomType")) {
-            message = "Invalid Room Type. Accepted values are: [SINGLE, DOUBLE, DELUXE, SUITE, PRESIDENTIAL]";
-        }
-
-        response.put("message", message);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex) {

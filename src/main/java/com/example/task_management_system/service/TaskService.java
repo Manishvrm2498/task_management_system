@@ -4,6 +4,7 @@ import com.example.task_management_system.dto.TaskRequest;
 import com.example.task_management_system.dto.TaskResponse;
 import com.example.task_management_system.entity.Task;
 import com.example.task_management_system.entity.UserEntity;
+import com.example.task_management_system.exception.ResourceNotFoundException;
 import com.example.task_management_system.repository.TaskRepository;
 import com.example.task_management_system.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,7 +40,7 @@ public class TaskService {
 
     private Task findTask(Long id) {
         Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Task Not Found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task Not Found"));
 
         UserEntity currentUser = getCurrentUser();
 

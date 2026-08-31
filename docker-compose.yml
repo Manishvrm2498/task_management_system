@@ -1,25 +1,4 @@
 services:
-  mysql:
-    image: mysql:8.4
-    platform: ${DOCKER_PLATFORM:-linux/amd64}
-    container_name: task-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root-password}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-task_db}
-    ports:
-      - "${MYSQL_PORT:-3307}:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    networks:
-      - task-network
-
   backend:
     platform: ${DOCKER_PLATFORM:-linux/amd64}
     build:
@@ -27,16 +6,30 @@ services:
       dockerfile: Dockerfile
     container_name: task-backend
     restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-task_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root-password}
+      SPRING_DATASOURCE_URL: jdbc:sqlite:/data/task-management.db
+      SPRING_DATASOURCE_USERNAME: ""
+      SPRING_DATASOURCE_PASSWORD: ""
       JWT_KEY: ${JWT_KEY:-change-me-to-a-long-random-jwt-secret-at-least-32-bytes}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES:-10}
+      OTP_DELIVERY_REQUIRED: ${OTP_DELIVERY_REQUIRED:-false}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      SPRING_MAIL_FROM: ${SPRING_MAIL_FROM:-}
+      SPRING_MAIL_SMTP_AUTH: ${SPRING_MAIL_SMTP_AUTH:-true}
+      SPRING_MAIL_STARTTLS_ENABLE: ${SPRING_MAIL_STARTTLS_ENABLE:-true}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-}
+      SENDGRID_FROM_NAME: ${SENDGRID_FROM_NAME:-Task Management System}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
     ports:
-      - "${BACKEND_PORT:-8080}:8080"
+      - "${BACKEND_PORT:-8081}:8081"
+    volumes:
+      - sqlite-data:/data
     networks:
       - task-network
 
@@ -55,7 +48,7 @@ services:
       - task-network
 
 volumes:
-  mysql-data:
+  sqlite-data:
 
 networks:
   task-network:
