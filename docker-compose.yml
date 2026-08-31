@@ -27,7 +27,7 @@ services:
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
     ports:
-      - "${BACKEND_PORT:-8081}:8081"
+      - "${BACKEND_PORT:-8081}:8080"
     volumes:
       - sqlite-data:/data
     networks:
